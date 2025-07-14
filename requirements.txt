@@ -5,3 +5,6 @@ ipykernel>=6.0.0
 jupyterlab>=3.0.0
 streamlit
 joblib
+seaborn
+mlflow
+cloudpickle

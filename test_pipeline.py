@@ -26,15 +26,26 @@ def spark_session():
 @pytest.fixture(scope="module")
 def mlflow_model():
     """Loads the MLflow model for tests."""
-    #mlflow_db_path = "C:/MONICA/Estudos/mlf_data/mlflow.db" 
+    # Use a variável de ambiente MLFLOW_DB_PATH diretamente.
+    # Ela já deve conter o prefixo 'sqlite:///' e o caminho completo.
+    tracking_uri = os.getenv('MLFLOW_DB_PATH')
+    
+    if not tracking_uri:
+        # Fallback robusto para execução local, caso a variável de ambiente não esteja definida.
+        local_db_dir = os.path.join(os.getcwd(), 'mlf_data')
+        local_db_path = os.path.join(local_db_dir, 'mlflow.db')
+        os.makedirs(local_db_dir, exist_ok=True) # Garante que o diretório exista localmente
+        tracking_uri = f"sqlite:///{local_db_path}"
+        print(f"ATENÇÃO: MLFLOW_DB_PATH não definida, usando fallback local: {tracking_uri}")
 
-    tracking_uri = os.getenv('MLFLOW_DB_PATH', 'sqlite:///C:/MONICA/Estudos/mlf_data/mlflow.db')
+    print(f"DEBUG: MLflow Tracking URI sendo usado: {tracking_uri}") # Mensagem de depuração
     mlflow.set_tracking_uri(tracking_uri)
     
     client = mlflow.tracking.MlflowClient()
     experiment = client.get_experiment_by_name("churn_prediction") 
     
     if experiment:
+        print(f"DEBUG: Experimento 'churn_prediction' encontrado com ID: {experiment.experiment_id}") # Mensagem de depuração
         runs = client.search_runs(
             experiment_ids=[experiment.experiment_id],
             order_by=["start_time DESC"],
@@ -42,11 +53,21 @@ def mlflow_model():
         )
         if runs:
             latest_run = runs[0]
+            print(f"DEBUG: Última execução encontrada: run_id={latest_run.info.run_id}, status={latest_run.info.status}") # Mensagem de depuração
             model_uri = f"runs:/{latest_run.info.run_id}/churn_model" 
-            model = mlflow.pyfunc.load_model(model_uri)
-            if model:
-                print(f"\nMLflow model loaded from {model_uri}")
-                return model
+            try:
+                model = mlflow.pyfunc.load_model(model_uri)
+                if model:
+                    print(f"\nMLflow model loaded from {model_uri}")
+                    return model
+            except Exception as e:
+                print(f"ERROR: Falha ao carregar o modelo do URI {model_uri}: {e}") # Mensagem de depuração
+                pytest.fail(f"Erro ao carregar o modelo MLflow do run_id {latest_run.info.run_id}: {e}")
+        else:
+            print("DEBUG: Nenhuma execução encontrada para o experimento 'churn_prediction'.") # Mensagem de depuração
+    else:
+        print("DEBUG: Experimento 'churn_prediction' NÃO encontrado.") # Mensagem de depuração
+    
     pytest.fail("MLflow model not found or could not be loaded. Ensure the model is trained and registered.")
 
 
@@ -82,7 +103,7 @@ def clean_and_prepare_spark_df(spark_df_raw):
                 .otherwise(col(col_name))
             )
         elif col_name == 'Churn':
-             spark_df_raw = spark_df_raw.withColumn(
+            spark_df_raw = spark_df_raw.withColumn(
                 col_name,
                 when(trim(col(col_name)) == "", "No") 
                 .when(col(col_name).isNull(), "No") 
@@ -141,7 +162,7 @@ def test_sample_prediction(spark_session, mlflow_model):
 
 def test_data_cleaning_results(spark_session):
     """Tests if data cleaning results in expected non-null numerical columns."""
-  
+ 
     test_raw_data = [
         ("StateA", "100", "415", "Phone1", "No", "Yes", "20", "150.5", "80", "25.0", "180.0", "90", "15.0", "200.0", "70", "10.0", "12.0", "5", "3.0", "1", "No"),
         ("StateB", "120", "NA", "Phone2", "Yes", "", "10", "", "70", "20.0", "200.0", "80", "18.0", "180.0", "60", "9.0", "10.0", "4", "2.0", "", "Yes"), # Area code as "NA", Number vmail messages empty, Customer service calls empty
@@ -190,5 +211,3 @@ def test_data_cleaning_results(spark_session):
     for f in df_cleaned.schema.fields:
         if f.name in numerical_cols_to_check:
             assert isinstance(f.dataType, DoubleType), f"Column '{f.name}' is not DoubleType, but {f.dataType}"
-
-

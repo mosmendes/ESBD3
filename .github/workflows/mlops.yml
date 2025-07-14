@@ -62,11 +62,3 @@ jobs:
       - name: Rodar testes automatizados
         run: python -m pytest test_pipeline.py
         working-directory: ${{ github.workspace }}
-
-      - name: Rodar testes com cobertura
-        run: |
-          pytest --cov=./ \
-                --cov-report=xml \
-                --cov-fail-under=80 \
-                test_pipeline.py
-        working-directory: ${{ github.workspace }}

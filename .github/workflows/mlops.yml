@@ -1,6 +1,5 @@
 name: CI Pipeline MLOps
 
-
 on:
   workflow_dispatch:
   push:
@@ -8,7 +7,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
- 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -16,36 +14,62 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
- 
 
       - name: Configurar Python
         uses: actions/setup-python@v4
-
         with:
           python-version: 3.11
 
-      - name: Instalar dependências
-        run: pip install -r requirements.txt 
+      - name: Configurar Java para Spark
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
 
-      - name: Executar exploracao        
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Criar diretório local para MLflow e configurar HADOOP_HOME
+        run: |
+          mkdir -p ${{ github.workspace }}/mlf_data
+          mkdir -p ${{ github.workspace }}/hadoop/bin
+          wget https://github.com/steveloughran/winutils/raw/master/hadoop-3.3.1/bin/winutils.exe -P ${{ github.workspace}}/hadoop/bin/
+          wget https://github.com/steveloughran/winutils/raw/master/hadoop-3.3.1/bin/hadoop.dll -P ${{ github.workspace}}/hadoop/bin/
+          chmod +x ${{ github.workspace }}/hadoop/bin/winutils.exe
+          
+          echo "HADOOP_HOME=${{ github.workspace }}/hadoop" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/hadoop/bin" >> $GITHUB_PATH # Adiciona ao PATH
+
+      - name: Configurar variáveis de ambiente para notebooks e testes
+        run: |
+          echo "MLFLOW_DB_PATH=sqlite:///${{ github.workspace }}/mlf_data/mlflow.db" >> $GITHUB_ENV
+          echo "RAW_CSV_FILE_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-20.csv" >> $GITHUB_ENV
+          echo "CLEAN_PARQUET_FILE_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-80_limpo" >> $GITHUB_ENV
+          echo "TRAIN_DATA_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-80.csv" >> $GITHUB_ENV
+
+      - name: Executar exploracao
         run: |
           jupyter nbconvert --to notebook --execute notebooks/01_exploracao.ipynb --output 01_exploracao_output.ipynb --output-dir notebooks
+        working-directory: ${{ github.workspace }}
 
-      - name: Executar validacao        
+      - name: Executar validacao
         run: |
           jupyter nbconvert --to notebook --execute notebooks/02_pipeline_validacao.ipynb --output 02_pipeline_validacao_output.ipynb --output-dir notebooks
+        working-directory: ${{ github.workspace }}
 
-      - name: Executar monitor        
+      - name: Executar monitor
         run: |
           jupyter nbconvert --to notebook --execute notebooks/04_monitor_fairness.ipynb --output 04_monitor_fairness_output.ipynb --output-dir notebooks
+        working-directory: ${{ github.workspace }}
 
       - name: Rodar testes automatizados
         run: python -m pytest test_pipeline.py
+        working-directory: ${{ github.workspace }}
 
-      # Run pytest with coverage (fail if coverage < 80%). Include "--cov-branch \" below to use branch coverage
-      - name: Run tests with coverage  
+      - name: Rodar testes com cobertura
         run: |
           pytest --cov=./ \
                 --cov-report=xml \
                 --cov-fail-under=80 \
                 test_pipeline.py
+        working-directory: ${{ github.workspace }}

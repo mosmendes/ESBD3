@@ -40,7 +40,7 @@ jobs:
           jupyter nbconvert --to notebook --execute notebooks/04_monitor_fairness.ipynb --output 04_monitor_fairness_output.ipynb --output-dir notebooks
 
       - name: Rodar testes automatizados
-        run: pytest test_pipeline.py
+        run: python -m pytest test_pipeline.py
 
       # Run pytest with coverage (fail if coverage < 80%). Include "--cov-branch \" below to use branch coverage
       - name: Run tests with coverage  

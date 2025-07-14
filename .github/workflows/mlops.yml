@@ -3,10 +3,10 @@ name: CI Pipeline MLOps
 
 on:
   workflow_dispatch:
-  #push:
-  #  branches: [ "main" ]
-  #pull_request:
-  #  branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
  
 jobs:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Executar monitor        
         run: |
-          jupyter nbconvert --to notebook --execute notebooks/04_monitor_fairness.ipynb --output 04_monitor_fairness_output.ipynb --output-dir notebook
+          jupyter nbconvert --to notebook --execute notebooks/04_monitor_fairness.ipynb --output 04_monitor_fairness_output.ipynb --output-dir notebooks
 
       - name: Rodar testes automatizados
         run: pytest test_pipeline.py

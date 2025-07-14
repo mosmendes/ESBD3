@@ -34,11 +34,12 @@ jobs:
 
       - name: Criar diretório local para MLflow
         run: |
-          mkdir -p ${{ github.workspace }}/mlf_data
+          mkdir -p ${{ github.workspace }}/notebooks/mlf_data
 
       - name: Configurar variáveis de ambiente para notebooks e testes
         run: |
-          echo "MLFLOW_DB_PATH=sqlite:///${{ github.workspace }}/mlf_data/mlflow.db" >> $GITHUB_ENV
+          echo "MLFLOW_DB_PATH=sqlite:///${{ github.workspace }}/notebooks/mlf_data/mlflow.db" >> $GITHUB_ENV
+          echo "DEBUG: MLFLOW_DB_PATH set for GitHub Actions: ${{ github.workspace }}/mlf_data/mlflow.db"
           echo "RAW_CSV_FILE_PATH=${{ github.workspace }}/dataset/churn-bigml-20.csv" >> $GITHUB_ENV
           echo "CLEAN_PARQUET_FILE_PATH=${{ github.workspace }}/dataset/churn-bigml-80_limpo" >> $GITHUB_ENV
           echo "TRAIN_DATA_PATH=${{ github.workspace }}/dataset/churn-bigml-80.csv" >> $GITHUB_ENV

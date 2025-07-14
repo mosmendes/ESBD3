@@ -36,9 +36,9 @@ jobs:
       - name: Configurar variáveis de ambiente para notebooks e testes
         run: |
           echo "MLFLOW_DB_PATH=sqlite:///${{ github.workspace }}/mlf_data/mlflow.db" >> $GITHUB_ENV
-          echo "RAW_CSV_FILE_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-20.csv" >> $GITHUB_ENV
-          echo "CLEAN_PARQUET_FILE_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-80_limpo" >> $GITHUB_ENV
-          echo "TRAIN_DATA_PATH=${{ github.workspace }}/notebooks/dataset/churn-bigml-80.csv" >> $GITHUB_ENV
+          echo "RAW_CSV_FILE_PATH=${{ github.workspace }}/dataset/churn-bigml-20.csv" >> $GITHUB_ENV
+          echo "CLEAN_PARQUET_FILE_PATH=${{ github.workspace }}/dataset/churn-bigml-80_limpo" >> $GITHUB_ENV
+          echo "TRAIN_DATA_PATH=${{ github.workspace }}/dataset/churn-bigml-80.csv" >> $GITHUB_ENV
 
       - name: Executar exploracao
         run: |

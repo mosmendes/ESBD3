@@ -29,16 +29,9 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Criar diretório local para MLflow e configurar HADOOP_HOME
+      - name: Criar diretório local para MLflow
         run: |
           mkdir -p ${{ github.workspace }}/mlf_data
-          mkdir -p ${{ github.workspace }}/hadoop/bin
-          wget https://github.com/steveloughran/winutils/raw/master/hadoop-3.3.1/bin/winutils.exe -P ${{ github.workspace}}/hadoop/bin/
-          wget https://github.com/steveloughran/winutils/raw/master/hadoop-3.3.1/bin/hadoop.dll -P ${{ github.workspace}}/hadoop/bin/
-          chmod +x ${{ github.workspace }}/hadoop/bin/winutils.exe
-          
-          echo "HADOOP_HOME=${{ github.workspace }}/hadoop" >> $GITHUB_ENV
-          echo "${{ github.workspace }}/hadoop/bin" >> $GITHUB_PATH # Adiciona ao PATH
 
       - name: Configurar variáveis de ambiente para notebooks e testes
         run: |

@@ -26,8 +26,9 @@ def spark_session():
 @pytest.fixture(scope="module")
 def mlflow_model():
     """Loads the MLflow model for tests."""
-    mlflow_db_path = "C:/MONICA/Estudos/mlf_data/mlflow.db" 
-    tracking_uri = f"sqlite:///{mlflow_db_path}" 
+    #mlflow_db_path = "C:/MONICA/Estudos/mlf_data/mlflow.db" 
+
+    tracking_uri = os.getenv('MLFLOW_DB_PATH', 'sqlite:///C:/MONICA/Estudos/mlf_data/mlflow.db')
     mlflow.set_tracking_uri(tracking_uri)
     
     client = mlflow.tracking.MlflowClient()

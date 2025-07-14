@@ -28,17 +28,9 @@ def mlflow_model():
     """Loads the MLflow model for tests."""
     # Use a variável de ambiente MLFLOW_DB_PATH diretamente.
     # Ela já deve conter o prefixo 'sqlite:///' e o caminho completo.
-    tracking_uri = os.getenv('MLFLOW_DB_PATH')
-    
-    if not tracking_uri:
-        # Fallback robusto para execução local, caso a variável de ambiente não esteja definida.
-        local_db_dir = os.path.join(os.getcwd(), 'mlf_data')
-        local_db_path = os.path.join(local_db_dir, 'mlflow.db')
-        os.makedirs(local_db_dir, exist_ok=True) # Garante que o diretório exista localmente
-        tracking_uri = f"sqlite:///{local_db_path}"
-        print(f"ATENÇÃO: MLFLOW_DB_PATH não definida, usando fallback local: {tracking_uri}")
 
-    print(f"DEBUG: MLflow Tracking URI sendo usado: {tracking_uri}") # Mensagem de depuração
+    tracking_uri = os.getenv('MLFLOW_DB_PATH', 'sqlite:///C:/MONICA/Estudos/mlf_data/mlflow.db')
+    
     mlflow.set_tracking_uri(tracking_uri)
     
     client = mlflow.tracking.MlflowClient()

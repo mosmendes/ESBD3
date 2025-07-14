@@ -26,11 +26,20 @@ def spark_session():
 @pytest.fixture(scope="module")
 def mlflow_model():
     """Loads the MLflow model for tests."""
-    # Use a variável de ambiente MLFLOW_DB_PATH diretamente.
-    # Ela já deve conter o prefixo 'sqlite:///' e o caminho completo.
 
-    tracking_uri = os.getenv('MLFLOW_DB_PATH', 'sqlite:///C:/MONICA/Estudos/mlf_data/mlflow.db')
-    
+    #tracking_uri = os.getenv('MLFLOW_DB_PATH', 'sqlite:///C:/MONICA/Estudos/mlf_data/mlflow.db')
+
+    tracking_uri = os.getenv('MLFLOW_DB_PATH')
+
+    if not tracking_uri:
+        # Se a variável de ambiente NÃO ESTIVER DEFINIDA, falha imediatamente.
+        # Isso força você a defini-la explicitamente em ambos os ambientes.
+        pytest.fail("A variável de ambiente 'MLFLOW_DB_PATH' não está definida. "
+                    "Por favor, defina-a para o caminho completo do mlflow.db. "
+                    "Ex: export MLFLOW_DB_PATH='sqlite:///./mlf_data/mlflow.db'")
+
+    print(f"DEBUG: MLflow Tracking URI sendo usado: {tracking_uri}") # Mensagem de depuração
+
     mlflow.set_tracking_uri(tracking_uri)
     
     client = mlflow.tracking.MlflowClient()
